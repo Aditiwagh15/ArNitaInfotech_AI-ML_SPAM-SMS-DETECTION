@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spam Detector</title>
+
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}" />
+
+  <!-- Tailwind (utility classes) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Bootstrap (components/layout) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --glass-bg: rgba(15, 23, 42, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #020617;
+      background-image:
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Splash Screen */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #020617;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease-out, visibility 0.8s;
+    }
+
+    .splash-text {
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: white;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .splash-text .letter {
+      display: inline-block;
+      line-height: 1em;
+    }
+
+    .splash-sub {
+      font-size: 1.25rem;
+      color: #94a3b8;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    /* Main Content Animation */
+    .main-content {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+
+    .main-content.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Enhanced Card Styles */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px 0 rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    /* Button Gradient */
+    .btn-gradient {
+      background: var(--primary-gradient);
+      border: none;
+      color: white;
+      font-weight: 600;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      z-index: 1;
+    }
+
+    .btn-gradient::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+      opacity: 0;
+      z-index: -1;
+      transition: opacity 0.3s ease;
+    }
+
+    .btn-gradient:hover::before {
+      opacity: 1;
+    }
+
+    .btn-gradient:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+    }
+
+    /* Form Controls */
+    .form-control,
+    .form-control:focus {
+      background-color: rgba(15, 23, 42, 0.8) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      color: #f8fafc !important;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4) !important;
+      background-color: rgba(15, 23, 42, 0.95) !important;
+    }
+
+    .form-control::placeholder {
+      color: rgba(148, 163, 184, 0.5) !important;
+    }
+
+    /* Animations */
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .floating-logo {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .accent-bar {
+      height: 3px;
+      border-radius: 999px;
+      background: var(--primary-gradient);
+      background-size: 200% 200%;
+      animation: shimmer 3s ease infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <h1 class="splash-text">
+      <span class="text-wrapper">
+        <span class="letters">Spam Detector</span>
+      </span>
+    </h1>
+    <p class="splash-sub">Intelligent Message Classification</p>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container py-5 main-content">
+    <div class="mb-4">
+      <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2">
+        <div>
+          <div class="d-flex align-items-center gap-3">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="Spam Detector" class="d-none d-sm-block"
+              style="height: 42px; width: auto;" />
+            <div>
+              <div class="text-slate-400 text-sm font-medium tracking-wide">Flask + scikit-learn</div>
+              <h1 class="display-6 m-0 fw-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                Spam Detector</h1>
+              <p class="m-0 text-slate-300">
+                Fast text classification for SMS / email messages.
+              </p>
+              <div class="mt-3 accent-bar" style="max-width: 260px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-slate-400 text-sm">
+          Ctrl+Enter to predict
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Left: Input -->
+      <div class="col-12 col-lg-7">
+        <div class="glass-card rounded-4 p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-slate-300 fw-semibold">Message</div>
+              <div class="text-slate-400 text-sm">Paste text to classify.</div>
+            </div>
+            <div id="count" class="text-slate-500 text-sm">0 / 5000</div>
+          </div>
+
+          <div class="mt-3">
+            <textarea id="message" class="form-control bg-slate-950 border-slate-700 text-slate-100" rows="10"
+              placeholder="Type or paste a message…"></textarea>
+            <div id="help" class="mt-2 text-slate-400 text-sm">
+              Tip: shorter input = faster response.
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex flex-column flex-sm-row gap-2">
+            <button id="predictBtn" class="btn btn-gradient px-4 rounded-3 py-2">
+              <span id="btnText">Predict</span>
+              <span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"
+                aria-hidden="true"></span>
+            </button>
+
+            <button id="clearBtn" class="btn btn-outline-light px-4">Clear</button>
+          </div>
+        </div>
+
+        <div class="text-slate-500 text-sm mt-3">
+          Loads: <span class="font-mono">Model/spam_classifier.joblib</span> (preferred) or <span
+            class="font-mono">Model/spam_classifier.pkl</span>
+        </div>
+      </div>
+
+      <!-- Right: Result -->
+      <div class="col-12 col-lg-5">
+        <div class="glass-card rounded-4 p-4" style="transition-delay: 100ms;">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-slate-300 fw-semibold">Result</div>
+              <div class="text-slate-400 text-sm">Prediction and confidence.</div>
+            </div>
+            <div id="latency" class="text-slate-500 text-sm">—</div>
+          </div>
+
+          <div class="mt-3">
+            <div class="rounded-4 border border-slate-800 bg-slate-950 p-3">
+              <div class="d-flex align-items-center gap-2">
+                <div id="badge" class="px-3 py-1 rounded-pill font-semibold bg-slate-700 text-white">READY</div>
+                <div id="prob" class="text-slate-300"></div>
+              </div>
+
+              <div class="mt-3">
+                <div class="progress bg-slate-800" style="height: 10px;">
+                  <div id="probBar" class="progress-bar bg-info" style="width: 0%"></div>
+                </div>
+                <div class="mt-2 text-slate-400 text-sm">Spam probability</div>
+              </div>
+
+              <div id="error" class="mt-3 text-red-300 d-none"></div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-slate-400 text-sm">
+            Notes:
+            <ul class="mb-0 mt-2 list-disc ps-4">
+              <li>HAM means legitimate message.</li>
+              <li>SPAM means unwanted message.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    const messageEl = document.getElementById('message');
+    const countEl = document.getElementById('count');
+    const predictBtn = document.getElementById('predictBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+
+    const badge = document.getElementById('badge');
+    const prob = document.getElementById('prob');
+    const latency = document.getElementById('latency');
+    const errorEl = document.getElementById('error');
+    const probBar = document.getElementById('probBar');
+
+    // Splash Screen Animation
+    window.addEventListener('DOMContentLoaded', () => {
+      // Wrap every letter in a span
+      var textWrapper = document.querySelector('.splash-text .letters');
+      textWrapper.innerHTML = textWrapper.textContent.replace(/\S/g, "<span class='letter'>$&</span>");
+
+      anime.timeline({ loop: false })
+        .add({
+          targets: '.splash-text .letter',
+          scale: [0.3, 1],
+          opacity: [0, 1],
+          translateZ: 0,
+          easing: "easeOutExpo",
+          duration: 800,
+          delay: (el, i) => 70 * (i + 1)
+        })
+        .add({
+          targets: '.splash-sub',
+          opacity: [0, 1],
+          translateY: [20, 0],
+          easing: "easeOutExpo",
+          duration: 800,
+          offset: '-=400'
+        })
+        .add({
+          targets: '#splash-screen',
+          opacity: 0,
+          duration: 800,
+          easing: "easeOutSine",
+          delay: 1000,
+          complete: function (anim) {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.querySelector('.main-content').classList.add('visible');
+          }
+        });
+    });
+
+    const MAX_LEN = 5000;
+
+    function setLoading(isLoading) {
+      predictBtn.disabled = isLoading;
+      clearBtn.disabled = isLoading;
+      spinner.classList.toggle('d-none', !isLoading);
+      btnText.textContent = isLoading ? 'Analyzing…' : 'Predict';
+    }
+
+    function setResult({ ok, label, spam_probability, latency_ms, error }) {
+      if (!ok) {
+        badge.textContent = 'ERROR';
+        badge.className = 'px-3 py-1 rounded-pill font-semibold bg-red-600/80 text-white backdrop-blur-sm';
+        prob.textContent = '';
+        latency.textContent = '—';
+        probBar.style.width = '0%';
+        errorEl.textContent = error || 'Unknown error.';
+        errorEl.classList.remove('d-none');
+        return;
+      }
+
+      errorEl.classList.add('d-none');
+      errorEl.textContent = '';
+
+      const isSpam = label === 'SPAM';
+      badge.textContent = label;
+
+      // Animated color transition
+      badge.className = isSpam
+        ? 'px-3 py-1 rounded-pill font-semibold bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+        : 'px-3 py-1 rounded-pill font-semibold bg-emerald-600 text-white shadow-lg shadow-emerald-600/30';
+
+      if (typeof spam_probability === 'number') {
+        const pct = (spam_probability * 100).toFixed(2);
+        prob.textContent = `Confidence: ${pct}%`;
+
+        // Animate the bar
+        probBar.style.width = '0%';
+        setTimeout(() => {
+          probBar.style.width = `${Math.max(0, Math.min(100, spam_probability * 100))}%`;
+          probBar.className = isSpam
+            ? 'progress-bar bg-gradient-to-r from-red-500 to-rose-600'
+            : 'progress-bar bg-gradient-to-r from-green-400 to-emerald-600';
+        }, 100);
+
+      } else {
+        prob.textContent = '';
+        probBar.style.width = '0%';
+        probBar.className = 'progress-bar bg-info';
+      }
+
+      latency.textContent = `Time: ${latency_ms} ms`;
+
+      // Pulse effect on result
+      const resultCard = badge.closest('.glass-card');
+      anime({
+        targets: resultCard,
+        scale: [1, 1.02, 1],
+        duration: 400,
+        easing: 'easeOutQuad'
+      });
+    }
+
+    async function predict() {
+      const message = (messageEl.value || '').trim();
+      if (!message) {
+        messageEl.focus();
+        anime({
+          targets: messageEl,
+          translateX: [0, -10, 10, -10, 10, 0],
+          duration: 400,
+          easing: 'easeInOutSine'
+        });
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // Fake delay for effect if needed, but not adding it to keep it fast
+        const res = await fetch('/api/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await res.json().catch(() => ({ ok: false, error: 'Invalid JSON response from server.' }));
+        if (!res.ok) {
+          setResult({ ok: false, error: data.error || 'Request failed.' });
+          return;
+        }
+        setResult(data);
+      } catch (e) {
+        setResult({ ok: false, error: e?.message || 'Network error.' });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    messageEl.addEventListener('input', () => {
+      const len = messageEl.value.length;
+      countEl.textContent = `${len} / ${MAX_LEN}`;
+      if (len > MAX_LEN) {
+        countEl.classList.add('text-rose-400');
+      } else {
+        countEl.classList.remove('text-rose-400');
+      }
+    });
+
+    predictBtn.addEventListener('click', predict);
+
+    messageEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        predict();
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      messageEl.value = '';
+      countEl.textContent = `0 / ${MAX_LEN}`;
+      badge.textContent = 'READY';
+      badge.className = 'px-3 py-1 rounded-pill font-semibold bg-slate-700/50 text-white border border-slate-600';
+      prob.textContent = '';
+      latency.textContent = '—';
+      probBar.style.width = '0%';
+      probBar.className = 'progress-bar bg-info';
+      errorEl.textContent = '';
+      errorEl.classList.add('d-none');
+
+      messageEl.focus();
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
